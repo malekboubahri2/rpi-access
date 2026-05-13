@@ -100,25 +100,110 @@
     });
   }
 
+  function ageLabel(cachedAtUnix) {
+    if (!cachedAtUnix) return "never";
+    var secs = Math.max(0, Math.round(Date.now() / 1000 - cachedAtUnix));
+    if (secs < 5)   return "just now";
+    if (secs < 60)  return secs + "s ago";
+    if (secs < 3600) return Math.round(secs / 60) + "m ago";
+    return Math.round(secs / 3600) + "h ago";
+  }
+
+  function setRescanLabel(cachedAtUnix) {
+    if (!rescanBtn) return;
+    var label = rescanBtn.querySelector(".label");
+    if (label) label.textContent = "Rescan";
+    rescanBtn.title = "Last scan: " + ageLabel(cachedAtUnix);
+  }
+
+  // The first time the user hits "Rescan" we explain that the AP will
+  // drop for a few seconds. localStorage so we don't nag forever.
+  function confirmHardRescan() {
+    try {
+      if (localStorage.getItem("rpi-access.rescanWarned") === "1") return true;
+    } catch (e) { /* private mode */ }
+    var ok = window.confirm(
+      "Rescan will briefly drop this WiFi (~15s) so the Pi can scan. " +
+      "Your phone should reconnect automatically. Continue?"
+    );
+    if (ok) {
+      try { localStorage.setItem("rpi-access.rescanWarned", "1"); } catch (e) { /* ignore */ }
+    }
+    return ok;
+  }
+
   async function loadNetworks() {
     setBusy(rescanBtn, true);
-    renderEmpty("Scanning…");
+    var hadResults = list.querySelector(".network") !== null;
+    if (!hadResults) renderEmpty("Scanning…");
     try {
       var res = await fetch("/api/networks", { headers: { Accept: "application/json" } });
       var data = await res.json();
-      if (!res.ok) {
+      if (!res.ok && !data.networks) {
         renderEmpty(data.error || "Scan failed");
         return;
       }
       render(data.networks);
+      setRescanLabel(data.cached_at);
     } catch (err) {
-      renderEmpty("Scan request failed.");
+      if (!hadResults) renderEmpty("Scan request failed.");
     } finally {
       setBusy(rescanBtn, false);
     }
   }
 
-  if (rescanBtn) rescanBtn.addEventListener("click", loadNetworks);
+  // Hard rescan: tells the orchestrator to cycle the AP, then polls
+  // /api/networks until the cache timestamp moves forward.
+  async function hardRescan() {
+    if (!confirmHardRescan()) return;
+    setBusy(rescanBtn, true);
+    renderEmpty("Cycling AP for a fresh scan — your phone may briefly disconnect…");
+    var beforeAt = 0;
+    try {
+      var preRes = await fetch("/api/networks");
+      var preData = await preRes.json();
+      beforeAt = preData.cached_at || 0;
+      await fetch("/api/rescan", { method: "POST" });
+    } catch (e) { /* keep going to polling */ }
+
+    var deadline = Date.now() + 45000;
+    while (Date.now() < deadline) {
+      await new Promise(function (r) { setTimeout(r, 3000); });
+      try {
+        var res = await fetch("/api/networks");
+        var data = await res.json();
+        if ((data.cached_at || 0) > beforeAt) {
+          render(data.networks);
+          setRescanLabel(data.cached_at);
+          setBusy(rescanBtn, false);
+          return;
+        }
+      } catch (e) { /* keep polling */ }
+    }
+    setBusy(rescanBtn, false);
+    renderEmpty("Rescan timed out. Refresh the page when the AP is back.");
+  }
+
+  if (rescanBtn) {
+    rescanBtn.addEventListener("click", function (ev) {
+      // Shift-click → force a hard rescan even if a recent one exists.
+      if (ev.shiftKey) { hardRescan(); return; }
+      loadNetworks();
+    });
+    rescanBtn.addEventListener("contextmenu", function (ev) {
+      ev.preventDefault();
+      hardRescan();
+    });
+  }
+
+  var hardLink = document.getElementById("hard-rescan-link");
+  if (hardLink) {
+    hardLink.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      hardRescan();
+    });
+  }
+
   // Initial load.
   loadNetworks();
   // Light auto-refresh in the background, but only while no connect in flight.

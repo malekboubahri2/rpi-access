@@ -23,7 +23,7 @@
 <section class="card">
   <div class="row between">
     <h2>Available networks</h2>
-    <button class="btn ghost" id="rescan-btn" type="button">
+    <button class="btn ghost" id="rescan-btn" type="button" title="Refresh">
       <span class="spinner" hidden></span>
       <span class="label">Rescan</span>
     </button>
@@ -31,6 +31,10 @@
   <ul class="network-list" id="network-list" aria-live="polite">
     <li class="empty">Scanning…</li>
   </ul>
+  <p class="muted hint-row">
+    List looks stale? <a href="#" id="hard-rescan-link">Force a full rescan</a>
+    — briefly disconnects this WiFi (~15s) so the Pi can scan.
+  </p>
 </section>
 
 <section class="card hidden" id="connect-card">
