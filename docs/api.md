@@ -49,8 +49,9 @@ UIs can stop polling once that flips.
 
 ## `GET /api/networks`
 
-Triggers a fresh scan and returns visible networks, strongest signal
-first.
+Returns visible networks, strongest signal first. The endpoint asks
+`nmcli` for its global scan cache (unscoped — see scanner.py for why).
+This is cheap even while the AP is up.
 
 **Response (200)**
 
@@ -66,14 +67,37 @@ first.
       "bssid": "AA:BB:CC:DD:EE:FF",
       "is_open": false
     }
-  ]
+  ],
+  "cached_at": 1716393600.123
 }
 ```
 
-**Response (500)**
+`cached_at` is the unix timestamp of the most recent successful scan
+(0 if nothing has been scanned yet). If the live call failed the
+response includes `"stale": true` and the previous cache is served.
+
+**Response (500-stale)**
 
 ```json
-{ "networks": [], "error": "nmcli failed (rc=1): …" }
+{
+  "networks": [...],
+  "cached_at": 1716393580.0,
+  "error": "nmcli failed (rc=1): …",
+  "stale": true
+}
+```
+
+## `POST /api/rescan`
+
+Forces a *real* rescan. On a single-radio Pi this briefly drops the AP
+(typically ~15 s) so the chip can scan, then restores it with the same
+SSID and credentials. The phone reconnects automatically. Returns
+immediately; poll `/api/networks` until `cached_at` advances.
+
+**Response (200)**
+
+```json
+{ "ok": true, "warning": "AP will briefly drop" }
 ```
 
 ## `POST /api/connect`

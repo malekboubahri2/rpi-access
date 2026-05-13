@@ -108,6 +108,25 @@ The service is running as a non-root user without the right polkit
 rules. The shipped unit runs as `root`; don't change that without
 adding polkit rules for `org.freedesktop.NetworkManager.network-control`.
 
+### Portal scan list is empty while the AP is up
+
+Cause: `nmcli device wifi list ifname wlan0` returns empty when wlan0
+is committed to AP mode. We deliberately do NOT pass `ifname` for the
+list query — `nmcli device wifi list` (no scope) serves NM's global
+scan cache, which works even in AP mode.
+
+If you see an empty list and a `journalctl -u rpi-access` log line like
+`live scan failed; serving cache`, NetworkManager hasn't cached
+anything yet. Use the **"Force a full rescan"** link in the portal (or
+`POST /api/rescan`) to briefly cycle the AP for a real scan.
+
+To verify by hand while SSH'd in:
+
+```bash
+nmcli device wifi list                 # global cache — should show APs
+nmcli device wifi list ifname wlan0    # scoped — empty while AP is up
+```
+
 ### Portal loads but `/api/networks` is empty
 
 Often a kernel-side scan stall. Force a rescan from outside the
