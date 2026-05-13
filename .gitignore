@@ -77,3 +77,7 @@ node_modules/
 runtime/
 state.json
 /srv/rpi-access/state/
+
+# Claude Code agent local-only files (rules under .claude/rule/ ARE checked in)
+.claude/settings.local.json
+.claude/*.local.json
