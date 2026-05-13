@@ -123,11 +123,37 @@ class Scanner:
             return list(self._cache), self._cache_at
 
 
+def _leading_int(raw: str) -> int | None:
+    """Pull the leading integer off a possibly-unit-suffixed field.
+
+    `"2457 MHz"` -> 2457, `"100%"` -> 100, `"  42 "` -> 42, `"--"` -> None.
+    """
+    if not raw:
+        return None
+    s = raw.strip()
+    digits: list[str] = []
+    for ch in s:
+        if ch.isdigit():
+            digits.append(ch)
+        else:
+            # Stop at the first non-digit so we don't accidentally
+            # concatenate `2457` with anything after the space.
+            break
+    if not digits:
+        return None
+    return int("".join(digits))
+
+
 def parse_scan_output(raw: str) -> list[Network]:
     """Parse the terse `nmcli -t` output.
 
     The format is `field1:field2:...` per line. Colons inside values are
     escaped as `\\:`. Empty SSID lines (hidden networks) are dropped.
+
+    NetworkManager >= ~1.32 prints units on numeric fields even in
+    terse mode (e.g. `FREQ=2457 MHz`, `SIGNAL=100%`). Older versions
+    emit bare integers. We strip non-digits before converting so both
+    work.
     """
     networks: dict[str, Network] = {}  # de-dupe by SSID, keep strongest signal
 
@@ -143,10 +169,9 @@ def parse_scan_output(raw: str) -> list[Network]:
         ssid = ssid_raw.strip()
         if not ssid:
             continue  # hidden network
-        try:
-            signal = int(signal_raw)
-            frequency = int(freq_raw)
-        except ValueError:
+        signal = _leading_int(signal_raw)
+        frequency = _leading_int(freq_raw)
+        if signal is None or frequency is None:
             log.debug("non-integer numeric in scan line: %r", line)
             continue
 
