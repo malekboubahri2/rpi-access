@@ -141,6 +141,9 @@ class _DummyOrchestrator:
         def scan(self):
             return []
 
+        def cached(self):
+            return [], 0.0
+
     scanner = _Scanner()
 
     def request_connect(self, ssid: str, psk: str | None) -> None:
@@ -151,6 +154,9 @@ class _DummyOrchestrator:
 
     def request_retry(self) -> None:
         log.info("[dummy] retry")
+
+    def request_rescan(self) -> None:
+        log.info("[dummy] rescan")
 
     def snapshot(self):
         return self._Snap()

@@ -91,6 +91,17 @@ class BootOrchestrator:
             log.info("retry requested")
             self._pending = self._handle_retry_request
 
+    def request_rescan(self) -> None:
+        """Queue a fresh WiFi scan.
+
+        If the AP is currently up, this briefly takes it down so the
+        single Pi radio can scan, then brings it back up. The UI warns
+        the user before triggering this.
+        """
+        with self._lock:
+            log.info("rescan requested")
+            self._pending = self._handle_rescan_request
+
     def snapshot(self) -> OrchestratorStatus:
         """Return a copy of the current status (thread-safe)."""
         with self._lock:
@@ -211,6 +222,51 @@ class BootOrchestrator:
     def _handle_retry_request(self) -> None:
         self._transition(State.SCANNING, "user-requested retry")
         self._try_known_networks()
+
+    def _handle_rescan_request(self) -> None:
+        """Refresh the scanner cache, cycling the AP if necessary.
+
+        On a single-radio Pi the radio cannot scan while in AP mode, so
+        if we're currently broadcasting (PORTAL / BEACON / DIRECT) we
+        tear the AP down for the duration of the scan, then bring it
+        back up with the same SSID. The phone reconnects automatically
+        because the saved credentials are unchanged.
+        """
+        cycle_states = (State.PORTAL, State.BEACON, State.DIRECT)
+        ap_was_up = self.status.state in cycle_states
+        previous_ap_ssid = self.status.ap_ssid
+
+        if ap_was_up:
+            log.info("rescan: dropping AP for scan window (state=%s)",
+                     self.status.state.value)
+            try:
+                self.ap.stop()
+            except Exception as exc:  # noqa: BLE001
+                log.warning("rescan: ap.stop failed (non-fatal): %s", exc)
+
+        try:
+            self.scanner.scan(timeout=self.cfg.network.scan_timeout_s)
+        except ScanError as exc:
+            log.warning("rescan: scan failed: %s", exc)
+
+        if ap_was_up:
+            log.info("rescan: bringing AP back up (ssid=%s)", previous_ap_ssid)
+            try:
+                # Re-derive in case the ethernet IP changed during the scan
+                # window — otherwise we'd put up a stale SSID.
+                eth_ip = self._refresh_ethernet_ip()
+                if eth_ip and self.status.state == State.BEACON:
+                    ssid = self._ap_ssid(ethernet_ip=eth_ip)
+                else:
+                    ssid = previous_ap_ssid or self._ap_ssid(ethernet_ip=eth_ip)
+                self.ap.start(ssid)
+                self.status.ap_ssid = ssid
+            except Exception as exc:  # noqa: BLE001
+                log.error("rescan: failed to restore AP: %s", exc)
+                self.status.error = (
+                    "Rescan completed but the access point did not come back "
+                    "up. Reboot the device if this persists."
+                )
 
     # ----- helpers -----------------------------------------------------------------
 

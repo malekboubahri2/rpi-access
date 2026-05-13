@@ -30,9 +30,10 @@ class OrchestratorLike(Protocol):
     def request_connect(self, ssid: str, psk: str | None) -> None: ...
     def request_direct_mode(self) -> None: ...
     def request_retry(self) -> None: ...
+    def request_rescan(self) -> None: ...
     def snapshot(self) -> object: ...
 
-    # WiFi scanner — exposed for the UI's "Scan" button.
+    # WiFi scanner — exposed for the cached-results endpoint.
     scanner: object
 
 
@@ -89,16 +90,34 @@ def build_blueprint() -> Blueprint:
 
     @bp.route("/api/networks", methods=["GET"])
     def api_networks():
+        """Return nearby WiFi networks.
+
+        Calls `nmcli device wifi list` (unscoped — see scanner.py for the
+        reason). That query is cheap even while the AP is up because NM
+        serves it from its global scan cache, so we run it inline.
+        If the call fails we fall back to whatever the orchestrator's
+        last successful scan cached.
+        """
         orch = _get_orchestrator()
+        scanner = getattr(orch, "scanner", None)
+        if scanner is None:
+            return jsonify({"networks": [], "error": "scanner unavailable"}), 503
         try:
-            scanner = getattr(orch, "scanner", None)
-            if scanner is None:
-                return jsonify({"networks": [], "error": "scanner unavailable"}), 503
             nets = scanner.scan()
+            cached, cached_at = scanner.cached()
+            return jsonify({
+                "networks": [n.to_dict() for n in nets],
+                "cached_at": cached_at,
+            })
         except WifiError as exc:
-            log.warning("scan API failed: %s", exc)
-            return jsonify({"networks": [], "error": str(exc)}), 500
-        return jsonify({"networks": [n.to_dict() for n in nets]})
+            log.warning("live scan failed; serving cache: %s", exc)
+            cached, cached_at = scanner.cached()
+            return jsonify({
+                "networks": [n.to_dict() for n in cached],
+                "cached_at": cached_at,
+                "error": str(exc),
+                "stale": True,
+            })
 
     @bp.route("/api/connect", methods=["POST"])
     def api_connect():
@@ -118,6 +137,18 @@ def build_blueprint() -> Blueprint:
         orch = _get_orchestrator()
         orch.request_retry()
         return jsonify({"ok": True})
+
+    @bp.route("/api/rescan", methods=["POST"])
+    def api_rescan():
+        """Queue a force-rescan. On a Pi this briefly drops the AP.
+
+        Returns immediately; the cache (and `/api/networks`) updates
+        after ~10-20 s. The phone will momentarily disconnect from the
+        AP and reconnect automatically.
+        """
+        orch = _get_orchestrator()
+        orch.request_rescan()
+        return jsonify({"ok": True, "warning": "AP will briefly drop"})
 
     @bp.route("/api/direct", methods=["POST"])
     def api_direct():

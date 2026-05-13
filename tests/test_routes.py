@@ -32,7 +32,17 @@ def test_status_api(client):
 def test_networks_api_empty(client):
     res = client.get("/api/networks")
     assert res.status_code == 200
-    assert res.get_json() == {"networks": []}
+    body = res.get_json()
+    assert body["networks"] == []
+    assert body["cached_at"] == 0.0
+
+
+def test_rescan_endpoint(client):
+    res = client.post("/api/rescan")
+    assert res.status_code == 200
+    body = res.get_json()
+    assert body["ok"] is True
+    assert "warning" in body
 
 
 def test_connect_validation_error(client):
