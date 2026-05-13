@@ -30,16 +30,22 @@ connect attempt.
   "ssid": null,
   "ap_ssid": "rpi-access-A1B2",
   "ip_address": null,
+  "ethernet_ip": null,
   "error": null,
   "is_terminal": false
 }
 ```
 
 `state` is one of: `boot`, `scanning`, `connecting`, `client`,
-`ap_starting`, `portal`, `direct`, `error`, `stopped`.
+`ap_starting`, `portal`, `beacon`, `direct`, `error`, `stopped`.
 
-`is_terminal` is `true` for `client`, `direct`, `stopped` — UIs can
-stop polling once that flips.
+`ethernet_ip` is non-null when a wired link is up with a routable IPv4
+address. In `beacon` state, the AP's SSID encodes this IP
+(`rpi-<dashed-ip>`, e.g. `rpi-192-168-1-42`) for discovery on the wired
+LAN.
+
+`is_terminal` is `true` for `client`, `beacon`, `direct`, `stopped` —
+UIs can stop polling once that flips.
 
 ## `GET /api/networks`
 

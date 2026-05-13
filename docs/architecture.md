@@ -72,6 +72,21 @@ Allowed transitions are encoded in `_ALLOWED`. Illegal transitions are
 silently logged and ignored — the state machine is the single source of
 truth, so a buggy caller cannot corrupt the device's networking.
 
+### Ethernet "beacon" mode
+
+When a wired link is already serving an IP at boot, the orchestrator
+skips WiFi onboarding entirely and brings the AP up in **beacon** mode:
+the SSID is rewritten to `rpi-<dashed eth IP>` (e.g.
+`rpi-192-168-1-42`). Anyone in physical range can read the Pi's
+address off their WiFi list and SSH in over the wired LAN — no mDNS,
+no router-admin login, no MAC-table scraping.
+
+The orchestrator polls `ip -4 addr show eth0` every
+`ethernet_poll_s` seconds while the AP is up. If the IP changes (DHCP
+renewal, cable swap), it tears the AP down and brings a new one up
+with the refreshed SSID. If the cable is pulled, it falls back to the
+standard SCANNING → onboarding flow.
+
 ## Key design choices
 
 ### Why NetworkManager-only?

@@ -26,8 +26,16 @@ core.boot.BootOrchestrator.run()
    │
    │ State: BOOT
    ▼
-SCANNING
-   │ nmcli device wifi rescan
+ethernet IP present on eth0?
+   │
+   ├── yes ─▶ AP_STARTING → BEACON
+   │            (AP up, SSID = rpi-<dashed eth IP>, e.g. rpi-192-168-1-42)
+   │            (Flask portal still serves on 192.168.4.1 for optional WiFi onboarding)
+   │            (eth poll every `ethernet_poll_s`; if IP changes → restart AP; if cable
+   │             pulled → fall back to SCANNING)
+   │
+   └── no  ─▶ SCANNING
+                  │ nmcli device wifi rescan
    │ nmcli device wifi list -t -f SSID,SIGNAL,SECURITY,FREQ,IN-USE,BSSID
    ▼
 Match against CredentialStore.list_known()
@@ -118,7 +126,7 @@ starts clean, and falls back to AP mode.
 
 `DIRECT` is a sticky state for users who never want to onboard the Pi
 to upstream WiFi. The AP stays up indefinitely; the captive portal
-stays reachable at `http://192.168.4.1`; SSH at `ssh pi@192.168.4.1`
+stays reachable at `http://192.168.4.1`; SSH at `ssh user@192.168.4.1`
 keeps working as long as the OS user is set up.
 
 To exit Direct Mode, navigate back to `/` from the portal and pick a
