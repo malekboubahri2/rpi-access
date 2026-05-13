@@ -57,13 +57,18 @@ def build_blueprint() -> Blueprint:
             state=snap.state.value,
             detail=snap.detail,
             ap_ssid=snap.ap_ssid,
+            ethernet_ip=snap.ethernet_ip,
         )
 
     @bp.route("/direct", methods=["GET"])
     def direct_mode_page() -> str:
         orch = _get_orchestrator()
         snap = orch.snapshot()
-        return render_template("direct_mode.html", ap_ssid=snap.ap_ssid)
+        return render_template(
+            "direct_mode.html",
+            ap_ssid=snap.ap_ssid,
+            ethernet_ip=snap.ethernet_ip,
+        )
 
     # ------- JSON API ------------------------------------------------------------
 
@@ -77,8 +82,9 @@ def build_blueprint() -> Blueprint:
             "ssid": snap.ssid,
             "ap_ssid": snap.ap_ssid,
             "ip_address": snap.ip_address,
+            "ethernet_ip": snap.ethernet_ip,
             "error": snap.error,
-            "is_terminal": snap.state in (State.CLIENT, State.DIRECT, State.STOPPED),
+            "is_terminal": snap.state in (State.CLIENT, State.DIRECT, State.BEACON, State.STOPPED),
         })
 
     @bp.route("/api/networks", methods=["GET"])

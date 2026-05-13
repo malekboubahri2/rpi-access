@@ -25,6 +25,30 @@
     bannerText.textContent = detail || state;
   }
 
+  function setEthernetBanner(ethIp) {
+    // Ensures the "wired LAN detected" banner reflects current state even
+    // if the cable was plugged in after the page first rendered.
+    var existing = document.getElementById("eth-banner");
+    if (!ethIp) {
+      if (existing) existing.remove();
+      return;
+    }
+    var msg =
+      "<strong>Wired LAN detected.</strong> The device is reachable at " +
+      "<code>ssh user@" + escapeHtml(ethIp) + "</code> right now — " +
+      "you can skip WiFi onboarding if you're already on the same network.";
+    if (existing) {
+      existing.innerHTML = msg;
+      return;
+    }
+    if (!banner || !banner.parentNode) return;
+    var div = document.createElement("div");
+    div.className = "info-banner";
+    div.id = "eth-banner";
+    div.innerHTML = msg;
+    banner.parentNode.appendChild(div);
+  }
+
   function showError(msg) {
     if (!connectErr) return;
     connectErr.hidden = !msg;
@@ -124,8 +148,17 @@
     });
   }
 
-  // Reflect current state on first load.
-  fetch("/api/status").then(function (r) { return r.json(); }).then(function (d) {
-    setBanner(d.state, d.detail);
-  }).catch(function () { /* ignore */ });
+  // Reflect current state on first load, then poll lightly so the UI
+  // also picks up an ethernet cable being plugged in mid-session.
+  function refreshStatus() {
+    return fetch("/api/status")
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        setBanner(d.state, d.detail);
+        setEthernetBanner(d.ethernet_ip);
+      })
+      .catch(function () { /* ignore */ });
+  }
+  refreshStatus();
+  setInterval(refreshStatus, 8000);
 })();

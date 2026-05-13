@@ -26,6 +26,7 @@ def test_status_api(client):
     body = res.get_json()
     assert body["state"] == "portal"
     assert "ap_ssid" in body
+    assert "ethernet_ip" in body
 
 
 def test_networks_api_empty(client):

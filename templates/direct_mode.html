@@ -21,9 +21,15 @@
       <span class="v"><code>http://192.168.4.1</code></span>
     </li>
     <li>
-      <span class="k">SSH</span>
-      <span class="v"><code>ssh pi@192.168.4.1</code></span>
+      <span class="k">SSH (over the AP)</span>
+      <span class="v"><code>ssh user@192.168.4.1</code></span>
     </li>
+    {% if ethernet_ip %}
+    <li>
+      <span class="k">SSH (over wired LAN)</span>
+      <span class="v"><code>ssh user@{{ ethernet_ip }}</code></span>
+    </li>
+    {% endif %}
   </ul>
   <p class="muted">
     To leave Direct Mode, return to the onboarding page and pick a network.

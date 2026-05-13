@@ -137,6 +137,7 @@ body {
   background: var(--muted);
 }
 .status-banner[data-state="portal"]    .status-dot { background: var(--accent); }
+.status-banner[data-state="beacon"]    .status-dot { background: var(--ok); }
 .status-banner[data-state="scanning"]  .status-dot { background: var(--accent); animation: pulse 1.2s infinite; }
 .status-banner[data-state="connecting"].status-dot { background: var(--warn); animation: pulse 1.2s infinite; }
 .status-banner[data-state="client"]    .status-dot { background: var(--ok); }
@@ -144,6 +145,23 @@ body {
 .status-banner[data-state="error"]     .status-dot { background: var(--err); }
 
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ---------- info banner (e.g. ethernet detected) ----------------------- */
+
+.info-banner {
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+.info-banner code {
+  background: var(--surface-2);
+  padding: 0.05rem 0.35rem;
+  border-radius: 6px;
+}
 
 /* ---------- network list ------------------------------------------------ */
 

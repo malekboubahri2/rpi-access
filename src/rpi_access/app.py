@@ -134,6 +134,7 @@ class _DummyOrchestrator:
         ip_address = None
         error = None
         ap_ssid = "rpi-access-DEV"
+        ethernet_ip = None
         history: list[str] = []
 
     class _Scanner:

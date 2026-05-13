@@ -7,7 +7,7 @@ device. On boot it will try to reach known WiFi networks; if none are
 reachable it transparently switches to **Access Point** mode and exposes a
 mobile-friendly **captive portal** for the user to enter new credentials. It
 can also be told to stay in **Direct Mode** — keeping the AP up indefinitely
-so the device is reachable over SSH at `pi@192.168.4.1`.
+so the device is reachable over SSH at `user@192.168.4.1`.
 
 The stack is intentionally boring and Linux-native:
 

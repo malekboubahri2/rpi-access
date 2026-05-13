@@ -11,6 +11,13 @@
     <span class="status-dot"></span>
     <span class="status-text" id="status-text">{{ detail or state }}</span>
   </div>
+  {% if ethernet_ip %}
+  <div class="info-banner" id="eth-banner">
+    <strong>Wired LAN detected.</strong>
+    The device is reachable at <code>ssh user@{{ ethernet_ip }}</code> right now —
+    you can skip WiFi onboarding if you're already on the same network.
+  </div>
+  {% endif %}
 </section>
 
 <section class="card">
@@ -62,7 +69,7 @@
   <h2>Stay on this device</h2>
   <p class="muted">
     Don't want the device to join your WiFi? Keep it in <em>Direct Mode</em> and connect over
-    SSH at <code>ssh pi@192.168.4.1</code>.
+    SSH at <code>ssh user@192.168.4.1</code>.
   </p>
   <button class="btn outline" id="direct-btn" type="button">Use Direct Mode</button>
 </section>

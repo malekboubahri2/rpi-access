@@ -185,5 +185,5 @@ Next steps:
   - reboot to let the orchestrator drive the boot flow from a clean slate
 
 Portal (when in AP mode):  http://192.168.4.1
-SSH in Direct Mode:        ssh pi@192.168.4.1
+SSH in Direct Mode:        ssh user@192.168.4.1
 EOF
