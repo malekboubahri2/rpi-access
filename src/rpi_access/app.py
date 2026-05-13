@@ -61,12 +61,29 @@ def create_app(cfg: Config, *, orchestrator: Any | None = None) -> Flask:
 
     app.config["SECRET_KEY"] = _load_secret_key(cfg)
     app.config["JSON_SORT_KEYS"] = False
+    # Static assets change with every deploy; aggressive phone caches
+    # (Mobile Safari especially) were masking the fact that fixed JS was
+    # actually being served. Set max_age=0 so the browser revalidates on
+    # each load. The portal is only reachable on a LAN so the bandwidth
+    # cost is negligible.
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
     app.config["orchestrator"] = orchestrator or _DummyOrchestrator()
     app.config["rpi_access_config"] = cfg
 
     app.register_blueprint(build_blueprint())
     # Captive probe blueprint MUST be registered last — it's a catch-all.
     app.register_blueprint(build_captive_blueprint())
+
+    @app.after_request
+    def _no_cache_for_html_and_api(resp):
+        # JSON API + the onboarding HTML must never be cached — the
+        # whole point is showing live device state.
+        ctype = resp.headers.get("Content-Type", "")
+        if request.path.startswith("/api/") or ctype.startswith("text/html"):
+            resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+            resp.headers["Pragma"] = "no-cache"
+            resp.headers["Expires"] = "0"
+        return resp
 
     @app.errorhandler(404)
     def _not_found(_exc):
