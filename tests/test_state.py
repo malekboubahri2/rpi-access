@@ -14,9 +14,14 @@ from rpi_access.core.state import State, Transition
         (State.CONNECTING, State.CLIENT),
         (State.CONNECTING, State.AP_STARTING),
         (State.AP_STARTING, State.PORTAL),
+        (State.AP_STARTING, State.BEACON),
         (State.PORTAL, State.CONNECTING),
         (State.PORTAL, State.DIRECT),
+        (State.PORTAL, State.BEACON),
+        (State.BEACON, State.SCANNING),
+        (State.BEACON, State.AP_STARTING),
         (State.CLIENT, State.SCANNING),
+        (State.CLIENT, State.BEACON),
     ],
 )
 def test_valid_transition(src, dst):
@@ -30,6 +35,7 @@ def test_valid_transition(src, dst):
         (State.PORTAL, State.CLIENT),       # must go through CONNECTING
         (State.STOPPED, State.SCANNING),    # terminal
         (State.DIRECT, State.PORTAL),       # cannot fall back into portal
+        (State.BEACON, State.PORTAL),       # leave beacon via scan/connect
     ],
 )
 def test_invalid_transition(src, dst):

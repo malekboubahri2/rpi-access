@@ -20,6 +20,7 @@ class State(str, Enum):
     CLIENT = "client"          # connected to upstream WiFi as a client
     AP_STARTING = "ap_starting"
     PORTAL = "portal"           # AP up, captive portal serving
+    BEACON = "beacon"           # ethernet up, AP advertises its IP via SSID
     DIRECT = "direct"           # user opted to stay on AP indefinitely
     ERROR = "error"
     STOPPED = "stopped"
@@ -32,9 +33,10 @@ _ALLOWED: dict[State, frozenset[State]] = {
     State.BOOT: frozenset({State.SCANNING, State.AP_STARTING, State.ERROR, State.STOPPED}),
     State.SCANNING: frozenset({State.CONNECTING, State.AP_STARTING, State.ERROR, State.STOPPED}),
     State.CONNECTING: frozenset({State.CLIENT, State.AP_STARTING, State.SCANNING, State.ERROR, State.STOPPED}),
-    State.CLIENT: frozenset({State.SCANNING, State.AP_STARTING, State.ERROR, State.STOPPED}),
-    State.AP_STARTING: frozenset({State.PORTAL, State.ERROR, State.STOPPED}),
-    State.PORTAL: frozenset({State.CONNECTING, State.DIRECT, State.AP_STARTING, State.ERROR, State.STOPPED}),
+    State.CLIENT: frozenset({State.SCANNING, State.AP_STARTING, State.BEACON, State.ERROR, State.STOPPED}),
+    State.AP_STARTING: frozenset({State.PORTAL, State.BEACON, State.ERROR, State.STOPPED}),
+    State.PORTAL: frozenset({State.CONNECTING, State.DIRECT, State.BEACON, State.AP_STARTING, State.ERROR, State.STOPPED}),
+    State.BEACON: frozenset({State.AP_STARTING, State.SCANNING, State.CONNECTING, State.ERROR, State.STOPPED}),
     State.DIRECT: frozenset({State.CONNECTING, State.STOPPED}),
     State.ERROR: frozenset({State.SCANNING, State.AP_STARTING, State.STOPPED}),
     State.STOPPED: frozenset(),
