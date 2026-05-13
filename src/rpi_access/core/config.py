@@ -26,6 +26,8 @@ _DEFAULTS: dict[str, dict[str, str]] = {
         "ap_dhcp_start": "192.168.4.10",
         "ap_dhcp_end": "192.168.4.100",
         "wifi_interface": "wlan0",
+        "ethernet_interface": "eth0",
+        "ethernet_poll_s": "10",
         "scan_timeout_s": "15",
         "connect_timeout_s": "25",
         "connect_retries": "3",
@@ -58,6 +60,8 @@ class NetworkConfig:
     ap_dhcp_start: str
     ap_dhcp_end: str
     wifi_interface: str
+    ethernet_interface: str
+    ethernet_poll_s: int
     scan_timeout_s: int
     connect_timeout_s: int
     connect_retries: int
@@ -124,6 +128,8 @@ def load_config(path: str | os.PathLike[str]) -> Config:
         ap_dhcp_start=n.get("ap_dhcp_start").strip(),
         ap_dhcp_end=n.get("ap_dhcp_end").strip(),
         wifi_interface=n.get("wifi_interface").strip(),
+        ethernet_interface=n.get("ethernet_interface").strip(),
+        ethernet_poll_s=_coerce_int("network", "ethernet_poll_s", n.get("ethernet_poll_s")),
         scan_timeout_s=_coerce_int("network", "scan_timeout_s", n.get("scan_timeout_s")),
         connect_timeout_s=_coerce_int("network", "connect_timeout_s", n.get("connect_timeout_s")),
         connect_retries=_coerce_int("network", "connect_retries", n.get("connect_retries")),

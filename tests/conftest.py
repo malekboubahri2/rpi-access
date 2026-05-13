@@ -35,6 +35,8 @@ def tmp_config(tmp_path) -> Config:
             ap_dhcp_start="192.168.4.10",
             ap_dhcp_end="192.168.4.100",
             wifi_interface="wlan0",
+            ethernet_interface="eth0",
+            ethernet_poll_s=2,
             scan_timeout_s=5,
             connect_timeout_s=5,
             connect_retries=1,

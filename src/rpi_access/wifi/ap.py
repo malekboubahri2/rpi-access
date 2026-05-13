@@ -34,11 +34,22 @@ class APManager:
 
     # ----- public API --------------------------------------------------------------
 
-    def derive_ssid(self, prefix: str) -> str:
-        """`rpi-access-XXXX` where XXXX is the last 4 hex of the wlan MAC.
+    def derive_ssid(self, prefix: str, ethernet_ip: str | None = None) -> str:
+        """Pick an SSID for the AP.
 
-        Falls back to a random hex if the MAC can't be read (e.g. in dev).
+        * If `ethernet_ip` is provided, encode it into the SSID so anyone in
+          range can read the Pi's wired address off the WiFi list. The
+          dot-separated address is dashed (`rpi-192-168-1-42`) to avoid
+          quoting issues in shells and clients.
+        * Otherwise, fall back to `<prefix>-<last 4 hex of wlan MAC>`.
         """
+        if ethernet_ip:
+            candidate = f"rpi-{ethernet_ip.replace('.', '-')}"
+            # SSIDs are limited to 32 octets; a well-formed IPv4 fits
+            # comfortably (max 19 chars) but guard against future surprises.
+            if len(candidate.encode("utf-8")) <= 32:
+                return candidate
+
         mac = self._read_mac()
         if mac:
             suffix = mac.replace(":", "")[-4:].upper()
