@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpi-access"
+version = "1.0.0"
+description = "Raspberry Pi WiFi onboarding + AP fallback + captive portal"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "rpi-access Contributors" }]
+keywords = ["raspberry-pi", "wifi", "captive-portal", "iot", "networkmanager"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: System :: Networking",
+]
+dependencies = [
+  "Flask>=3.0",
+  "cryptography>=42.0",
+  "gunicorn>=22.0",
+]
+
+[project.scripts]
+rpi-access = "rpi_access.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+rpi_access = ["templates/*.html", "static/**/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+pythonpath = ["src"]
