@@ -101,16 +101,19 @@ def build_blueprint() -> Blueprint:
         orch = _get_orchestrator()
         scanner = getattr(orch, "scanner", None)
         if scanner is None:
+            log.warning("api_networks: scanner unavailable")
             return jsonify({"networks": [], "error": "scanner unavailable"}), 503
         try:
             nets = scanner.scan()
             cached, cached_at = scanner.cached()
+            log.info("api_networks: scan returned %d networks (cache=%d, at=%.0f)",
+                     len(nets), len(cached), cached_at)
             return jsonify({
                 "networks": [n.to_dict() for n in nets],
                 "cached_at": cached_at,
             })
         except WifiError as exc:
-            log.warning("live scan failed; serving cache: %s", exc)
+            log.warning("api_networks: live scan failed (%s); serving cache", exc)
             cached, cached_at = scanner.cached()
             return jsonify({
                 "networks": [n.to_dict() for n in cached],
@@ -118,6 +121,12 @@ def build_blueprint() -> Blueprint:
                 "error": str(exc),
                 "stale": True,
             })
+        except Exception as exc:  # noqa: BLE001 — surface any unexpected error
+            log.exception("api_networks: unexpected failure: %s", exc)
+            return jsonify({
+                "networks": [],
+                "error": f"{type(exc).__name__}: {exc}",
+            }), 500
 
     @bp.route("/api/connect", methods=["POST"])
     def api_connect():

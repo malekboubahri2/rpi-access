@@ -66,7 +66,9 @@ def run(
     if redact_index is not None and 0 <= redact_index < len(safe):
         safe[redact_index] = _REDACTED
 
-    log.debug("nmcli %s", " ".join(safe))
+    # INFO so operators can grep `journalctl -u rpi-access` for what we
+    # asked nmcli to do; PSKs are already redacted above.
+    log.info("nmcli %s", " ".join(safe))
 
     if dry_run:
         return NmcliResult(args=safe, rc=0, stdout="", stderr="dry-run")
