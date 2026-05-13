@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Connect to WiFi &middot; rpi-access{% endblock %}
+{% block content %}
+<section class="card hero">
+  <h1>Connect this device to WiFi</h1>
+  <p class="muted">
+    You're connected to <strong>{{ ap_ssid or "rpi-access" }}</strong>. Pick a network below and enter
+    its password — the device will reboot into client mode once it succeeds.
+  </p>
+  <div class="status-banner" id="status-banner" data-state="{{ state }}">
+    <span class="status-dot"></span>
+    <span class="status-text" id="status-text">{{ detail or state }}</span>
+  </div>
+</section>
+
+<section class="card">
+  <div class="row between">
+    <h2>Available networks</h2>
+    <button class="btn ghost" id="rescan-btn" type="button">
+      <span class="spinner" hidden></span>
+      <span class="label">Rescan</span>
+    </button>
+  </div>
+  <ul class="network-list" id="network-list" aria-live="polite">
+    <li class="empty">Scanning…</li>
+  </ul>
+</section>
+
+<section class="card hidden" id="connect-card">
+  <h2>Connect to <span id="connect-ssid">…</span></h2>
+  <form id="connect-form" novalidate>
+    <input type="hidden" name="ssid" id="connect-ssid-input" />
+    <div class="form-row">
+      <label for="psk">Password</label>
+      <div class="input-with-action">
+        <input
+          type="password"
+          id="psk"
+          name="psk"
+          autocomplete="current-password"
+          spellcheck="false"
+          autocapitalize="off"
+          minlength="0"
+          placeholder="Enter network password"
+        />
+        <button type="button" class="reveal" id="psk-reveal" aria-label="Show password">Show</button>
+      </div>
+      <small class="hint" id="psk-hint">Leave blank for open networks.</small>
+    </div>
+    <div class="form-row inline">
+      <button class="btn primary" id="connect-btn" type="submit">
+        <span class="spinner" hidden></span>
+        <span class="label">Connect</span>
+      </button>
+      <button class="btn ghost" id="cancel-btn" type="button">Cancel</button>
+    </div>
+    <div class="error" id="connect-error" hidden></div>
+  </form>
+</section>
+
+<section class="card subtle">
+  <h2>Stay on this device</h2>
+  <p class="muted">
+    Don't want the device to join your WiFi? Keep it in <em>Direct Mode</em> and connect over
+    SSH at <code>ssh pi@192.168.4.1</code>.
+  </p>
+  <button class="btn outline" id="direct-btn" type="button">Use Direct Mode</button>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/networks.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+{% endblock %}

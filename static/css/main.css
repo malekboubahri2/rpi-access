@@ -1,0 +1,318 @@
+/* rpi-access — main layout + components.
+   Themes (colours) live in themes.css. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 16px;
+  line-height: 1.5;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- header / footer --------------------------------------------- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: env(safe-area-inset-top, 0) 1.25rem 0 1.25rem;
+  padding-top: max(env(safe-area-inset-top, 0), 0.75rem);
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 700;
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+.theme-toggle:hover { background: var(--surface-hover); }
+
+.app-footer {
+  margin-top: auto;
+  padding: 1rem 1.25rem env(safe-area-inset-bottom, 1rem) 1.25rem;
+  color: var(--muted);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.app-footer a { color: inherit; }
+
+/* ---------- layout ------------------------------------------------------- */
+
+.container {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.row { display: flex; align-items: center; gap: 0.75rem; }
+.row.between { justify-content: space-between; }
+.hidden { display: none !important; }
+
+/* ---------- cards -------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.card.subtle { background: var(--surface-2); }
+.card.hero h1 { margin-top: 0; }
+.card h1 { font-size: 1.4rem; margin: 0 0 0.5rem 0; }
+.card h2 { font-size: 1.05rem; margin: 0 0 0.75rem 0; }
+.muted { color: var(--muted); margin: 0.25rem 0 0.75rem 0; }
+
+/* ---------- status banner ----------------------------------------------- */
+
+.status-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+.status-banner[data-state="portal"]    .status-dot { background: var(--accent); }
+.status-banner[data-state="scanning"]  .status-dot { background: var(--accent); animation: pulse 1.2s infinite; }
+.status-banner[data-state="connecting"].status-dot { background: var(--warn); animation: pulse 1.2s infinite; }
+.status-banner[data-state="client"]    .status-dot { background: var(--ok); }
+.status-banner[data-state="direct"]    .status-dot { background: var(--ok); }
+.status-banner[data-state="error"]     .status-dot { background: var(--err); }
+
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* ---------- network list ------------------------------------------------ */
+
+.network-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.network {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+.network:hover { background: var(--surface-hover); }
+.network:active { transform: scale(0.99); }
+.network .ssid { font-weight: 600; }
+.network .meta { color: var(--muted); font-size: 0.85rem; display: flex; gap: 0.4rem; align-items: center; }
+.network .lock { font-size: 0.85rem; }
+.network .bars { display: inline-block; min-width: 28px; text-align: right; }
+.network.in-use { outline: 2px solid var(--accent); }
+
+.empty {
+  padding: 0.9rem;
+  color: var(--muted);
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+/* ---------- forms ------------------------------------------------------- */
+
+.form-row { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.9rem; }
+.form-row.inline { flex-direction: row; gap: 0.5rem; }
+.form-row label { font-size: 0.9rem; font-weight: 600; }
+.hint { color: var(--muted); }
+
+input[type="password"],
+input[type="text"] {
+  background: var(--input-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.input-with-action {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+.input-with-action input { flex: 1; }
+.reveal {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--fg);
+  border-radius: 10px;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  min-width: 64px;
+}
+.reveal:hover { background: var(--surface-hover); }
+
+/* ---------- buttons ----------------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.12s ease, transform 0.12s ease;
+  min-height: 44px;       /* iOS tap target */
+}
+.btn:active { transform: scale(0.98); }
+.btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+.btn.primary { background: var(--accent); color: var(--accent-fg); }
+.btn.primary:hover { filter: brightness(1.05); }
+
+.btn.ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--fg);
+}
+.btn.ghost:hover { background: var(--surface-hover); }
+
+.btn.outline {
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn.outline:hover { background: var(--surface-hover); }
+
+/* ---------- key/value list --------------------------------------------- */
+
+.kvlist {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.kvlist li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed var(--border);
+}
+.kvlist li:last-child { border-bottom: none; }
+.kvlist .k { color: var(--muted); }
+.kvlist .v code { background: var(--surface-2); padding: 0.1rem 0.4rem; border-radius: 6px; }
+
+/* ---------- spinner ----------------------------------------------------- */
+
+.spinner {
+  width: 1em; height: 1em;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: spin 0.75s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- error block ------------------------------------------------- */
+
+.error {
+  background: var(--err-bg);
+  color: var(--err);
+  border: 1px solid var(--err);
+  border-radius: 10px;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.95em; }
+
+@media (min-width: 720px) {
+  .container { padding-top: 2rem; }
+  .card { padding: 1.5rem; }
+}

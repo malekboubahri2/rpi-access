@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Direct Mode &middot; rpi-access{% endblock %}
+{% block content %}
+<section class="card hero">
+  <h1>Direct Mode active</h1>
+  <p class="muted">
+    The device will keep broadcasting <strong>{{ ap_ssid }}</strong> until you choose to onboard it
+    to a WiFi network.
+  </p>
+</section>
+
+<section class="card">
+  <h2>How to reach it</h2>
+  <ul class="kvlist">
+    <li>
+      <span class="k">WiFi network</span>
+      <span class="v"><code>{{ ap_ssid }}</code></span>
+    </li>
+    <li>
+      <span class="k">Gateway / portal</span>
+      <span class="v"><code>http://192.168.4.1</code></span>
+    </li>
+    <li>
+      <span class="k">SSH</span>
+      <span class="v"><code>ssh pi@192.168.4.1</code></span>
+    </li>
+  </ul>
+  <p class="muted">
+    To leave Direct Mode, return to the onboarding page and pick a network.
+  </p>
+  <a class="btn primary" href="/">Back to onboarding</a>
+</section>
+{% endblock %}

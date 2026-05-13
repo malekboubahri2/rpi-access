@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} &middot; rpi-access{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Something went wrong</h1>
+  <p class="muted">{{ code }} &middot; {{ message }}</p>
+  <a class="btn primary" href="/">Back to onboarding</a>
+</section>
+{% endblock %}
