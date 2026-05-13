@@ -1,0 +1,40 @@
+[Unit]
+Description=rpi-access - WiFi onboarding orchestrator + captive portal
+Documentation=https://github.com/your-org/rpi-access
+After=NetworkManager.service systemd-resolved.service
+Wants=NetworkManager.service
+# We must not start before NM has its first state snapshot.
+After=network-pre.target
+
+[Service]
+Type=simple
+ExecStartPre=/opt/rpi-access/scripts/healthcheck.sh
+ExecStart=/opt/rpi-access/.venv/bin/python -m rpi_access --config /etc/rpi-access/rpi-access.conf
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60s
+TimeoutStopSec=20s
+
+# Run as root — we need CAP_NET_ADMIN for nmcli AP setup, and binding to :80.
+# We do NOT relax to a normal user because polkit rules are fragile across
+# Raspberry Pi OS rebuilds.
+User=root
+Group=root
+
+# Hardening (kept compatible with the privileges we actually need).
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/etc/rpi-access /var/log/rpi-access /run
+
+# Capture stdout/stderr in journald.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rpi-access
+
+# Environment file (optional — only used if you create it).
+EnvironmentFile=-/etc/rpi-access/rpi-access.env
+
+[Install]
+WantedBy=multi-user.target
